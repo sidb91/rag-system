@@ -1,0 +1,14 @@
+langchain
+langchain-core
+langchain-google-genai
+langchain-community            
+chromadb 
+streamlit 
+pandas 
+matplotlib 
+scikit-learn
+pypdf
+flashrank
+ragas
+python-dotenv
+rank_bm25
