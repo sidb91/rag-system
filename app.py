@@ -12,10 +12,10 @@ from src.visualization import visualize_embeddings
 # Load API Keys
 load_dotenv()
 
-st.set_page_config(page_title="Gemini RAG Pro", layout="wide")
+st.set_page_config(page_title="RAG your resume", layout="wide")
 
 # --- UI Header ---
-st.title("🚀 Gemini Production RAG")
+st.title("🚀 RAG your resume")
 st.markdown("Hybrid Search + Semantic Re-ranking + PCA Visualization")
 
 # --- Sidebar: Data & Visualization ---
