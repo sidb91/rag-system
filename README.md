@@ -97,134 +97,276 @@ This will:
    - Generate response using Gemini
 3. View the response in the chat history
 
-**Example Questions:**
-- "What is the main topic of these documents?"
-- "Summarize the key findings"
-- "How does X relate to Y in the documents?"
-
-### Step 3: Visualize Clusters (Optional)
+### Step 3: Visualize Embeddings (Optional)
 1. Click **"Visualize Semantic Clusters"** in the sidebar
-2. A PCA-reduced plot shows how documents are semantically related
-3. Blue dots represent document chunks in 2D space
+2. See a PCA visualization of your document embeddings
+3. Explore how documents are semantically grouped
+
+---
+
+## 🔧 Troubleshooting
+
+### Issue: "GOOGLE_API_KEY not found"
+**Solution:** Ensure your `.env` file is in the project root with your API key
+```bash
+# Verify the file exists
+cat .env
+# Output should show: GOOGLE_API_KEY="sk-..."
+```
+
+### Issue: "No documents found in data/"
+**Solution:** Add documents to the data directory
+```bash
+# Check what's in the directory
+ls -la data/
+
+# Add files
+cp ~/Documents/my-resume.pdf data/
+cp ~/Documents/cover-letter.txt data/
+```
+
+### Issue: "ModuleNotFoundError" when running
+**Solution:** Activate the virtual environment
+```bash
+source .venv/bin/activate  # macOS/Linux
+# OR
+.venv\Scripts\activate  # Windows
+```
+
+### Issue: Port 8501 already in use
+**Solution:** Use a different port
+```bash
+streamlit run app.py --server.port 8502
+```
+
+### Issue: Slow performance on first run
+**Solution:** This is normal. First-time embedding takes longer. Subsequent runs use cached ChromaDB data.
 
 ---
 
 ## 📁 Project Structure
 
 ```
-RAG/
-├── app.py                 # Main Streamlit application
+rag-system/
+├── app.py                 # Main Streamlit entry point
 ├── requirements.txt       # Python dependencies
-├── .env                   # API keys (DO NOT COMMIT)
-├── .gitignore            # Git ignore rules
-├── README.md             # This file
-├── DESIGN.md             # Architecture & future improvements
-│
-├── src/                  # Source modules
-│   ├── __init__.py
-│   ├── ingestion.py      # Document loading & chunking
-│   ├── retrieval.py      # Hybrid search & re-ranking
-│   ├── generation.py     # RAG chain & LLM integration
-│   ├── visualization.py  # Embedding visualization
-│   ├── metrics.py        # RAG evaluation (future)
-│   └── __pycache__/
-│
-├── data/                 # Your documents (TXT/PDF)
-│   └── (add your files here)
-│
-└── database/             # Vector store (auto-created)
-    ├── chroma.sqlite3
-    └── [vector IDs]/
+├── .env                   # API keys (create this file)
+├── .venv/                 # Virtual environment (auto-created)
+├── data/                  # Your documents go here
+│   └── *.txt, *.pdf       # Supported file formats
+├── database/              # ChromaDB persistent storage
+│   └── chroma.sqlite3
+├── src/                   # Core RAG logic
+│   ├── ingestion.py       # Document processing
+│   ├── retrieval.py       # Hybrid search + re-ranking
+│   ├── generation.py      # Gemini response generation
+│   ├── visualization.py   # PCA clustering visualization
+│   └── metrics.py         # Evaluation metrics
+├── PLAN.md                # Development roadmap
+└── DESIGN.md              # System architecture
 ```
 
 ---
 
-## 🔧 Configuration
+## 🚀 Quick Start (Copy-Paste)
 
-### Document Chunking
-Edit `src/ingestion.py`:
-```python
-splitter = RecursiveCharacterTextSplitter(
-    chunk_size=1000,        # Adjust chunk size
-    chunk_overlap=100       # Adjust overlap
-)
-```
-
-### Retrieval Weights
-Edit `src/retrieval.py`:
-```python
-ensemble = EnsembleRetriever(
-    retrievers=[bm25, vector_retriever],
-    weights=[0.4, 0.6]      # BM25 vs Vector weights
-)
-```
-
-### LLM Parameters
-Edit `src/generation.py`:
-```python
-llm = ChatGoogleGenerativeAI(
-    model="gemini-2.5-flash",
-    temperature=0,           # 0=deterministic, 1=creative
-    max_output_tokens=2048
-)
-```
-
----
-
-## 🐛 Common Issues & Troubleshooting
-
-### Issue: `ModuleNotFoundError: No module named 'langchain'`
-**Solution:**
 ```bash
+# 1. Navigate to project
+cd /Users/siddhartha/Documents/Python/rag-system
+
+# 2. Activate environment
 source .venv/bin/activate
-pip install -r requirements.txt
+
+# 3. Create .env file with your API key
+cat > .env << EOF
+GOOGLE_API_KEY="your-google-api-key-here"
+EOF
+
+# 4. Add your documents
+mkdir -p data
+cp ~/Documents/my-resume.pdf data/
+
+# 5. Run the app
+streamlit run app.py
 ```
 
-### Issue: `No documents found in data/`
-**Solution:**
-- Create the `data/` folder: `mkdir -p data`
-- Add TXT or PDF files to `data/`
-- Click "Build/Update Knowledge Base" again
-
-### Issue: `GOOGLE_API_KEY not found`
-**Solution:**
-- Create `.env` file in project root
-- Add: `GOOGLE_API_KEY="your-key-here"`
-- Ensure it's not in `.gitignore` (for development)
-
-### Issue: `Streamlit connection refused`
-**Solution:**
-```bash
-# Kill any existing process on port 8501
-lsof -ti:8501 | xargs kill -9
-
-# Or use a different port
-streamlit run app.py --server.port 8502
-```
-
-### Issue: Slow embedding/generation
-**Solution:**
-- Reduce chunk size in `ingestion.py`
-- Reduce `max_output_tokens` in `generation.py`
-- Check your internet connection (API calls are network-dependent)
+The app will open at `http://localhost:8501` automatically.
 
 ---
 
-## 📊 Performance Tips
+## 🔑 API Key Setup (Detailed)
 
-1. **Faster Processing:**
-   - Use smaller chunk sizes (500-800 tokens)
-   - Reduce `top_k` values in retrieval
+### Getting Your Google API Key
+1. Open [Google AI Studio](https://aistudio.google.com/app/apikey)
+2. Click **"Create API Key"** button
+3. Select your project (or create new one)
+4. Click **"Create API Key in new project"**
+5. Copy the key displayed
 
-2. **Better Results:**
-   - Increase chunk size (1200-1500 tokens)
-   - Increase overlap (150-200)
-   - Use more retrieval results (k=10)
+### Adding to Your Project
+Create a `.env` file in the project root:
+```bash
+# macOS/Linux
+echo 'GOOGLE_API_KEY="paste-your-key-here"' > .env
 
-3. **Cost Optimization:**
-   - Cache frequently asked questions
-   - Batch process documents during off-peak hours
-   - Monitor API usage via Google Cloud Console
+# Windows (PowerShell)
+@'
+GOOGLE_API_KEY="paste-your-key-here"
+'@ | Out-File .env -Encoding UTF8
+```
+
+### Verify It Works
+```bash
+python -c "from dotenv import load_dotenv; import os; load_dotenv(); print('API Key loaded!' if os.getenv('GOOGLE_API_KEY') else 'Failed!')"
+```
+
+---
+
+## 📝 Detailed Usage Walkthrough
+
+### Complete Workflow
+
+**1. Initial Setup (First Time)**
+```bash
+# Terminal 1: Start the app
+cd /Users/siddhartha/Documents/Python/rag-system
+source .venv/bin/activate
+streamlit run app.py
+```
+
+**2. In the Browser (http://localhost:8501)**
+- You'll see the RAG chat interface
+- Left sidebar has two buttons: **"Build/Update Knowledge Base"** and **"Visualize Semantic Clusters"**
+
+**3. Build Your Knowledge Base**
+- Make sure documents are in `./data/` directory
+- Click **"Build/Update Knowledge Base"** button
+- Wait for "Database Ready!" message
+- This step:
+  - Reads all `.txt` and `.pdf` files from `./data/`
+  - Chunks documents into optimal sizes
+  - Generates embeddings (calls Google API)
+  - Stores in ChromaDB (persistent across sessions)
+
+**4. Ask Questions**
+- In the chat box, type: *"What are my key skills?"*
+- System performs:
+  - **Retrieval:** Hybrid search (BM25 keyword + vector semantic)
+  - **Re-ranking:** FlashrankRerank sorts by relevance
+  - **Generation:** Gemini creates response using retrieved context
+  - **Display:** Response appears in chat
+
+**5. Explore Embeddings (Optional)**
+- Click **"Visualize Semantic Clusters"**
+- See PCA 2D projection of your documents
+- Helps understand document relationships
+
+---
+
+## ⚙️ Configuration & Customization
+
+### Environment Variables
+Edit `.env` to add/modify:
+```bash
+# Required
+GOOGLE_API_KEY="sk-..."
+
+# Optional (defaults used if not set)
+EMBEDDING_MODEL="models/text-embedding-004"
+GENERATION_MODEL="gemini-1.5-flash"
+CHUNK_SIZE=500
+CHUNK_OVERLAP=100
+```
+
+### Document Processing Options
+In `src/ingestion.py`, you can modify:
+- **Chunk size:** Larger chunks = more context, slower retrieval
+- **Chunk overlap:** Prevents cutting info across chunks
+- **File types:** Add support for `.docx`, `.md`, etc.
+
+### Retrieval Settings
+In `src/retrieval.py`:
+- **BM25 weight:** Adjust keyword search sensitivity
+- **Vector weight:** Adjust semantic search sensitivity
+- **Re-ranking model:** Switch flashrank strategy
+
+---
+
+## ✅ Verification Checklist
+
+Before sharing or deploying:
+
+- [ ] `.env` file created with valid API key
+- [ ] `data/` directory has at least one document
+- [ ] Ran `streamlit run app.py` successfully
+- [ ] Clicked "Build/Update Knowledge Base" and got "Database Ready!"
+- [ ] Asked a test question and got a response
+- [ ] No error messages in terminal
+
+---
+
+## 🔍 Debugging & Logs
+
+### View Detailed Logs
+```bash
+# Run with verbose output
+streamlit run app.py --logger.level=debug
+```
+
+### Check What's Happening
+- **Terminal shows:** API calls, embeddings progress
+- **Browser shows:** Chat history, status messages
+- **database/ folder:** ChromaDB files (persistent storage)
+
+### Verify Data Ingestion
+```bash
+# Check documents are being read
+ls -la data/
+
+# Check database was created
+ls -la database/
+```
+
+---
+
+## 🚀 Next Steps
+
+1. **Add More Documents:** Copy PDFs/TXTs to `./data/`
+2. **Rebuild Database:** Click "Build/Update" again
+3. **Explore Results:** Check visualization and ask targeted questions
+4. **Customize:** Edit prompts in `src/generation.py`
+
+---
+
+## 📚 System Architecture
+
+```
+User Input (Chat)
+    ↓
+Retrieval Pipeline (src/retrieval.py)
+    ├→ Keyword Search (BM25)
+    ├→ Vector Search (Embeddings)
+    └→ Re-ranking (FlashrankRerank)
+    ↓
+Retrieved Context
+    ↓
+Generation (src/generation.py)
+    ├→ Prompt Engineering
+    └→ Gemini API Call
+    ↓
+Response Display (Chat)
+```
+
+---
+
+## 💡 Example Questions
+
+Try these queries after building your knowledge base:
+- "What is the main topic of these documents?"
+- "Summarize the key findings"
+- "How does X relate to Y in the documents?"
+- "What are the most important points?"
+- "Create a timeline of key events"
 
 ---
 
@@ -232,105 +374,72 @@ streamlit run app.py --server.port 8502
 
 ⚠️ **CRITICAL:** API keys in `.env` are for development only!
 
-**Production Deployment:**
+**Production Deployment Checklist:**
 - [ ] Use environment secrets (AWS Secrets Manager, Google Secret Manager)
-- [ ] Never commit `.env` to version control
+- [ ] Never commit `.env` to version control (verify `.gitignore`)
 - [ ] Rotate API keys regularly
 - [ ] Implement API rate limiting
 - [ ] Add authentication/authorization layer
-- [ ] Monitor API usage and costs
-
-See [DESIGN.md](DESIGN.md) for security roadmap.
-
----
-
-## 📈 Monitoring & Debugging
-
-### Enable Logging
-Add this to `app.py` for debugging:
-```python
-import logging
-logging.basicConfig(level=logging.DEBUG)
-```
-
-### Check API Quotas
-- Visit [Google Cloud Console](https://console.cloud.google.com)
-- Monitor API usage and quotas
-- Set up billing alerts
-
-### Performance Profiling
-```bash
-# Profile memory usage
-pip install memory-profiler
-python -m memory_profiler src/ingestion.py
-```
+- [ ] Monitor API usage and costs via Google Cloud Console
+- [ ] Use HTTPS for any web deployment
+- [ ] Implement input sanitization
+- [ ] Add audit logging
 
 ---
 
-## 🎯 Next Steps
+## 📊 Performance Optimization
 
-1. **Read [DESIGN.md](DESIGN.md)** for:
-   - Complete architecture overview
-   - Technology stack details
-   - Future improvement roadmap
-   - Performance characteristics
+### For Speed
+- Reduce chunk size: 300-500 tokens
+- Lower `top_k` retrieval: 3-5 results
+- Use smaller embedding models
+- Enable caching for frequent queries
 
-2. **Customize for Your Use Case:**
-   - Add domain-specific prompts
-   - Adjust chunking strategy
-   - Integrate additional data sources
+### For Quality
+- Increase chunk size: 1000-1500 tokens
+- Increase overlap: 150-200 tokens
+- Higher `top_k`: 8-10 results
+- Use stronger models (gemini-pro instead of flash)
 
-3. **Evaluate RAG Quality:**
-   - Use RAGAS framework (installed)
-   - Implement custom metrics
-   - Track query-response quality
-
----
-
-## 📚 Documentation
-
-- **Architecture:** See [DESIGN.md](DESIGN.md)
-- **Source Code:** See individual files in `src/`
-- **External Links:**
-  - [LangChain Docs](https://docs.langchain.com)
-  - [ChromaDB Docs](https://docs.trychroma.com)
-  - [Google AI API](https://ai.google.dev)
-  - [Streamlit Docs](https://docs.streamlit.io)
+### Cost Control
+- Monitor API usage: `Google Cloud Console → Billing`
+- Set up usage alerts
+- Cache results for identical queries
+- Batch process during off-peak hours
 
 ---
 
-## 🧪 Development
+## 📚 Documentation & Resources
 
-### Code Structure
-- Clean modular design with separated concerns
-- Each module has clear responsibilities
-- Easy to extend with custom components
-
-### Adding New Retrievers
-Edit `src/retrieval.py`:
-```python
-# Add new retriever to ensemble
-new_retriever = MyCustomRetriever.from_documents(chunks)
-ensemble = EnsembleRetriever(
-    retrievers=[bm25, vector_retriever, new_retriever],
-    weights=[0.3, 0.4, 0.3]
-)
-```
-
-### Testing
-```bash
-# Install test dependencies
-pip install pytest pytest-cov
-
-# Run tests
-pytest tests/
-```
+- **Full Architecture:** See [DESIGN.md](DESIGN.md)
+- **Source Code:** See individual files in [src/](src/)
+- **External References:**
+  - [LangChain Documentation](https://docs.langchain.com)
+  - [ChromaDB Vector Store](https://docs.trychroma.com)
+  - [Google Generative AI API](https://ai.google.dev)
+  - [Streamlit Framework](https://docs.streamlit.io)
 
 ---
 
-## 📝 License
+## ❓ FAQ
 
-This project is open source. Check LICENSE file for details.
+**Q: Can I use different LLMs (OpenAI, Claude, etc.)?**
+A: Yes! Edit [src/generation.py](src/generation.py) to swap LLM providers. LangChain supports most major providers.
+
+**Q: How do I add more documents?**
+A: Copy files to `data/` directory and click "Build/Update Knowledge Base" again. Changes are automatic.
+
+**Q: What documents formats are supported?**
+A: Currently `.txt` and `.pdf`. To add `.docx`, `.md`, etc., update [src/ingestion.py](src/ingestion.py).
+
+**Q: Is this production-ready?**
+A: The architecture is solid, but add security monitoring, rate limiting, and error handling for production.
+
+**Q: How much does it cost?**
+A: Google Gemini API has free tier (up to 60 requests/min). Monitor costs in [Google Cloud Console](https://console.cloud.google.com).
+
+**Q: Can I deploy this online?**
+A: Yes! Streamlit has free [Cloud](https://streamlit.io/cloud) hosting, or use Docker/Kubernetes for enterprise deployment.
 
 ---
 
@@ -338,36 +447,22 @@ This project is open source. Check LICENSE file for details.
 
 Contributions welcome! Please:
 1. Fork the repository
-2. Create a feature branch
-3. Submit a pull request
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Make your changes
+4. Submit a pull request
 
-See [DESIGN.md](DESIGN.md) for development roadmap.
-
----
-
-## ❓ FAQ
-
-**Q: Can I use different LLMs?**
-A: Yes! Edit `src/generation.py` to use Claude, OpenAI, or other providers.
-
-**Q: How do I add more documents?**
-A: Drop TXT/PDF files in `data/` and click "Build/Update Knowledge Base".
-
-**Q: Is this production-ready?**
-A: The architecture is production-ready, but add security/monitoring for production deployment.
-
-**Q: How much does it cost?**
-A: Google Gemini has free tier limits. Monitor via Google Cloud Console.
+See [DESIGN.md](DESIGN.md) for the development roadmap and planned features.
 
 ---
 
-## 📞 Support
+## 📞 Support & Troubleshooting
 
-For issues:
-1. Check **Troubleshooting** section above
-2. Review [DESIGN.md](DESIGN.md) for architecture
-3. Check console output for error messages
-4. Enable debug logging for more details
+**Having Issues?** Try this order:
+1. Check [Troubleshooting section](#-troubleshooting) above
+2. Verify `data/` has documents: `ls -la data/`
+3. Check `.env` file exists: `cat .env | grep GOOGLE_API_KEY`
+4. Run with debug logging: `streamlit run app.py --logger.level=debug`
+5. Review [DESIGN.md](DESIGN.md) for architecture insights
 
 ---
 
