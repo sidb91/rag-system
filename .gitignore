@@ -40,7 +40,6 @@ wheels/
 .DS_Store
 
 # Data & Database
-/data/
 /database/
 *.db
 *.sqlite
